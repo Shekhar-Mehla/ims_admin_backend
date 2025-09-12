@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
-const NotificationSchema = new mongoose.Schema(
+
+export const NotificationSchema = new mongoose.Schema(
   {
     profileId: {
       type: mongoose.Schema.Types.ObjectId,
