@@ -2,8 +2,6 @@ import mongoose from "mongoose";
 
 const AuthSchema = new mongoose.Schema(
   {
-    // fName: { type: String, required: true },
-    // lName: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String },
     providers: [{ provider: String, providerId: String }],

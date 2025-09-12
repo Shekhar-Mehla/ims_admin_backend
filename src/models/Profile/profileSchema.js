@@ -19,5 +19,5 @@ const ProfileSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-profileCollection = mongoose.model("Profile", ProfileSchema);
+const profileCollection = mongoose.model("Profile", ProfileSchema);
 export default profileCollection;

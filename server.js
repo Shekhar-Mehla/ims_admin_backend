@@ -2,6 +2,7 @@ import express from "express";
 import connection from "../ims_admin_be/src/dbConfig.js";
 import cors from "cors";
 import errorMiddleWare from "./src/middlewares/errorMiddleWare.js";
+import authRoutes from "./src/routes/authRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -20,6 +21,9 @@ app.get("/", (req, res) => {
 });
 app.use(cors());
 app.use(express.json());
+
+// auth routes
+app.use("/api/v1/auth", authRoutes);
 
 // write everything above do not touch these error middelware
 app.use((req, res, next) => {
