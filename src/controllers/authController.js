@@ -227,7 +227,7 @@ export const forgetPasswordController = async (req, res, next) => {
     sendEmail({
       to: existing.email,
       subject: "Password Changed",
-      template: `<p>Your password has been changed successfully. If you did not initiate this change, please contact support immediately.</p>`,
+      template: `<p>Your password has been changed successfully. For the further technical assistant please contact Admin.</p>`,
     });
     // send email notification about password change
     return responseClient({
