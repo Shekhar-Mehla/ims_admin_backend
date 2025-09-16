@@ -1,7 +1,10 @@
 import express from "express";
 import registerDataValidator from "../joiValidators/registerDataValidator.js";
 
-import { registerController } from "../controllers/authController.js";
+import {
+  generateNewOtpController,
+  registerController,
+} from "../controllers/authController.js";
 
 const authRoutes = express.Router();
 

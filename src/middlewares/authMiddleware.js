@@ -1,10 +1,1 @@
-export const registerDataValidationMiddleware = (req,res,next)=>{
-
-
-
-
-
-
-  
-
-}
+export const registerDataValidationMiddleware = (req, res, next) => {};

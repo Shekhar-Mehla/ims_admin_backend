@@ -25,7 +25,6 @@ export const registerController = async (req, res) => {
     }
     // hashed the password
     const hashedPassword = await bcryptPassword(req.body.password);
-  
 
     const auth = await createUser({
       email,
