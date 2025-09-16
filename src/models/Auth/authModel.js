@@ -10,3 +10,10 @@ export const updateRefreshToken = async (email, refreshToken) =>
     { refreshToken },
     { new: true }
   );
+
+export const updatePasswordByEmail = async (email, newPassword) =>
+  await authCollection.findOneAndUpdate(
+    { email },
+    { password: newPassword },
+    { new: true }
+  );
