@@ -1,13 +1,19 @@
 import responseClient from "../utility/responseClient.js";
 
 // import { sendVerificationLink } from "../../services/emailService.js";
-import { checkUserByEmail, createUser } from "../models/Auth/authModel.js";
+import {
+  checkUserByEmail,
+  createUser,
+  updateRefreshToken,
+} from "../models/Auth/authModel.js";
 import { createProfile } from "../models/Profile/profileModel.js";
-import { bcryptPassword } from "../utility/bcrypt.js";
+import { bcryptPassword, comparePassword } from "../utility/bcrypt.js";
 import generateOTP from "../utility/genrateOtp.js";
 import { createOtpModel } from "../models/Otp/otpModel.js";
 import { otpEmailTemplate } from "../services/email/templates/emailOtp.js";
 import { sendEmail } from "../services/email/sendEmail.js";
+import { generatejwts } from "../utility/jwts.js";
+import { deleteManySessionByAuthId } from "../models/Session/sessionModel.js";
 
 export const registerController = async (req, res) => {
   try {
@@ -28,7 +34,7 @@ export const registerController = async (req, res) => {
 
     const auth = await createUser({
       email,
-      passwordHash: hashedPassword,
+      password: hashedPassword,
       verified: false,
     });
     if (!auth?._id) {
@@ -36,7 +42,6 @@ export const registerController = async (req, res) => {
         res,
         statusCode: 400,
         message: "error in creating user",
-        payload: null,
       });
     }
     const profile = await createProfile({
@@ -104,5 +109,51 @@ export const registerController = async (req, res) => {
       statusCode: 500,
       message: "Server error during registration",
     });
+  }
+};
+//login controller
+export const loginController = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+    const auth = await checkUserByEmail(email);
+
+    if (auth?._id) {
+      const isMatch = await comparePassword(password, auth.password);
+
+      if (isMatch) {
+        const jwts = await generatejwts(auth?._id, email, req);
+
+        return responseClient({
+          res,
+          statusCode: 200,
+          message: "login successful",
+          payload: jwts,
+        });
+      }
+    } else {
+      return responseClient({
+        res,
+        statusCode: 401,
+        message: "Invalid email or password",
+      });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+//logout Controller
+export const logoutController = async (req, res, next) => {
+  try {
+    const { email } = req.userInfo;
+    await updateRefreshToken(email, null);
+    await deleteManySessionByAuthId(req.userInfo._id);
+
+    return responseClient({
+      res,
+      statusCode: 200,
+      message: "Logout successful",
+    });
+  } catch (error) {
+    next(error);
   }
 };

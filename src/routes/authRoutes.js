@@ -1,5 +1,7 @@
 import express from "express";
-import registerDataValidator from "../joiValidators/registerDataValidator.js";
+import registerDataValidator, {
+  loginDataValidator,
+} from "../joiValidators/registerDataValidator.js";
 
 import {
   generateNewOtpController,
@@ -9,5 +11,6 @@ import {
 const authRoutes = express.Router();
 
 authRoutes.post("/register", registerDataValidator, registerController);
-
+authRoutes.post("/login", loginDataValidator, loginController);
+authRoutes.post("/logout", userAuthMiddleware, logoutController);
 export default authRoutes;
