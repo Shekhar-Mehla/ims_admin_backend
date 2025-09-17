@@ -4,6 +4,7 @@ import responseClient from "../utility/responseClient.js";
 import {
   checkUserByEmail,
   createUser,
+  updatePasswordByEmail,
   updateRefreshToken,
 } from "../models/Auth/authModel.js";
 import { createProfile } from "../models/Profile/profileModel.js";
@@ -152,6 +153,87 @@ export const logoutController = async (req, res, next) => {
       res,
       statusCode: 200,
       message: "Logout successful",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+// generate new otp controller
+export const generateNewOtpController = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const existing = await checkUserByEmail(email);
+    if (!existing) {
+      return responseClient({
+        res,
+        statusCode: 404,
+        message: "Email not registered",
+        payload: null,
+      });
+    }
+    // create otp
+    const otpCode = await generateOTP();
+    // store otp into otp collection
+    const otpObject = {
+      authId: existing._id,
+      code: otpCode,
+      purpose: "email_verification",
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+    };
+    const otp = await createOtpModel(otpObject);
+    // send email with otp
+    sendEmail({
+      to: existing.email,
+      subject: otp.purpose,
+      template: otpEmailTemplate(otp.code),
+    });
+    if (!otp._id) {
+      return responseClient({
+        res,
+        statusCode: 400,
+        message: "error in creating otp",
+        payload: null,
+      });
+    }
+    // send email with otp
+    return responseClient({
+      res,
+      statusCode: 200,
+      message: "OTP sent successfully",
+      payload: otp.code,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// forget password controller
+export const forgetPasswordController = async (req, res, next) => {
+  try {
+    const { email, newPassword, otp } = req.body;
+    const existing = await checkUserByEmail(email);
+    if (!existing) {
+      return responseClient({
+        res,
+        statusCode: 404,
+        message: "Email not registered",
+        payload: null,
+      });
+    }
+    // hash the new password
+    const hashedPassword = await bcryptPassword(newPassword);
+    // update the password
+    await updatePasswordByEmail(email, hashedPassword);
+    sendEmail({
+      to: existing.email,
+      subject: "Password Changed",
+      template: `<p>Your password has been changed successfully. For the further technical assistant please contact Admin.</p>`,
+    });
+    // send email notification about password change
+    return responseClient({
+      res,
+      statusCode: 200,
+      message: "Password updated successfully",
     });
   } catch (error) {
     next(error);
