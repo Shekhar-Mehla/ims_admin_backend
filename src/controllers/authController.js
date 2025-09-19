@@ -244,11 +244,7 @@ export const generateNewOtpController = async (req, res, next) => {
     };
     const otp = await createOtpModel(otpObject);
     // send email with otp
-    sendEmail({
-      to: existing.email,
-      subject: otp.purpose,
-      template: otpEmailTemplate(otp.code),
-    });
+
     if (!otp._id) {
       return responseClient({
         res,
@@ -257,6 +253,11 @@ export const generateNewOtpController = async (req, res, next) => {
         payload: null,
       });
     }
+    sendEmail({
+      to: existing.email,
+      subject: otp.purpose,
+      template: otpEmailTemplate(otp.code),
+    });
     // send email with otp
     return responseClient({
       res,
@@ -286,6 +287,13 @@ export const forgetPasswordController = async (req, res, next) => {
     const hashedPassword = await bcryptPassword(newPassword);
     // update the password
     const user = await updateUser({ email }, { password: hashedPassword });
+    if (!user._id) {
+      return responseClient({
+        res,
+        message: "something wnet wrong to fetch user. try again",
+        statusCode: 400,
+      });
+    }
     sendEmail({
       to: existing.email,
       subject: "Password Changed",

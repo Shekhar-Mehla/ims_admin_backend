@@ -10,7 +10,7 @@ export const generateAccessToken = async (authId, req) => {
       expiresIn: "15m",
     }
   );
-  console.log(accessToken);
+  
   const obj = {
     authId,
     accessToken,
@@ -18,7 +18,7 @@ export const generateAccessToken = async (authId, req) => {
     ip: req.ip || null,
     expiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes from now
   };
-  console.log(obj);
+
   await createSession(obj);
   return accessToken;
 };
@@ -35,7 +35,9 @@ export const generateRefreshToken = async (email) => {
       expiresIn: "7d",
     }
   );
-  await updateRefreshToken(email, refreshToken);
+  console.log(refreshToken, ".......");
+  const user = await updateRefreshToken(email, refreshToken);
+  console.log(user);
   return refreshToken;
 };
 export const verfiyRefreshToken = (token) => {
