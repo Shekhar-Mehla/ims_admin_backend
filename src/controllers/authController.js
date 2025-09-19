@@ -4,13 +4,13 @@ import responseClient from "../utility/responseClient.js";
 import {
   checkUserByEmail,
   createUser,
-  updatePasswordByEmail,
   updateRefreshToken,
+  updateUser,
 } from "../models/Auth/authModel.js";
 import { createProfile } from "../models/Profile/profileModel.js";
 import { bcryptPassword, comparePassword } from "../utility/bcrypt.js";
 import generateOTP from "../utility/genrateOtp.js";
-import { createOtpModel } from "../models/Otp/otpModel.js";
+import { createOtpModel, getOtpCollection } from "../models/Otp/otpModel.js";
 import { otpEmailTemplate } from "../services/email/templates/emailOtp.js";
 import { sendEmail } from "../services/email/sendEmail.js";
 import { generatejwts } from "../utility/jwts.js";
@@ -83,26 +83,23 @@ export const registerController = async (req, res) => {
     }
 
     const template = otpEmailTemplate(otp.code);
-    console.log(template);
+
     const mail = await sendEmail({
       to: auth.email,
       subject: otp.purpose,
       template: template,
     });
-
-    // // make url ito activate the account and send the token into url
-
-    // // await sendVerificationLink(email, token);
-
-    // return responseClient({
-    //   res,
-    //   statusCode: 200,
-    //   message: "Registration successful. Please verify your email.",
-    //   payload: {
-    //     authId: auth._id,
-    //     profileId: profile._id,
-    //   },
-    // });
+    mail
+      ? responseClient({
+          res,
+          statusCode: 201,
+          message: "we have sent you an email with verification code",
+        })
+      : responseClient({
+          res,
+          statusCode: 400,
+          message: "something went wrong try again to register",
+        });
   } catch (err) {
     console.error("Registration error:", err);
     return responseClient({
@@ -112,7 +109,72 @@ export const registerController = async (req, res) => {
     });
   }
 };
+
+// account activation controller
+
+export const activateAccountController = async (req, res, next) => {
+  try {
+    const { otp } = req.body;
+
+    // Fetch OTP record from database
+    const checkOtp = await getOtpCollection(otp);
+    console.log(checkOtp);
+
+    // If OTP is invalid or expired
+    if (!checkOtp?._id) {
+      return responseClient({
+        res,
+        statusCode: 400,
+        message:
+          "OTP you have provided is invalid or expired. Click on 'Generate New OTP' to get a fresh one.",
+      });
+    }
+
+    // Proceed only if OTP is for email verification
+    if (checkOtp.purpose === "email_verification") {
+      const user = await updateUser(
+        { _id: checkOtp.authId },
+        { verified: true }
+      );
+
+      if (user?._id) {
+        sendEmail({
+          to: user.email, // assuming `user` contains the email
+          subject: "Account Verified",
+          template: `
+            <p>Good news — your account has been <strong>successfully verified</strong>! 🎉</p>
+            <p>You can now log in and start using all the features available to you.</p>
+            <p>Welcome aboard, and thank you for joining us!</p>
+            <p>— The IMS Team</p>
+          `,
+        });
+
+        return responseClient({
+          res,
+          statusCode: 200,
+          message: "Account successfully verified.",
+        });
+      } else {
+        return responseClient({
+          res,
+          statusCode: 400,
+          message: "Something went wrong while verifying your account.",
+        });
+      }
+    } else {
+      return responseClient({
+        res,
+        statusCode: 400,
+        message: "OTP purpose mismatch. Cannot verify account.",
+      });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
 //login controller
+
 export const loginController = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -223,11 +285,11 @@ export const forgetPasswordController = async (req, res, next) => {
     // hash the new password
     const hashedPassword = await bcryptPassword(newPassword);
     // update the password
-    await updatePasswordByEmail(email, hashedPassword);
+    const user = await updateUser({ email }, { password: hashedPassword });
     sendEmail({
       to: existing.email,
       subject: "Password Changed",
-      template: `<p>Your password has been changed successfully. For the further technical assistant please contact Admin.</p>`,
+      template: `<p>Your password has been changed successfully. If you need further assistance, please contact the Admin.</p>`,
     });
     // send email notification about password change
     return responseClient({

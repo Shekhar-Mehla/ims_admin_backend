@@ -1,5 +1,6 @@
 import express from "express";
 import registerDataValidator, {
+  activateDataValidator,
   forgetPasswordDataValidator,
   generateNewOtpDataValidator,
   loginDataValidator,
@@ -11,6 +12,7 @@ import {
   loginController,
   logoutController,
   registerController,
+  activateAccountController,
 } from "../controllers/authController.js";
 import {
   renewAccessTokenMiddleware,
@@ -19,6 +21,7 @@ import {
 const authRoutes = express.Router();
 
 authRoutes.post("/register", registerDataValidator, registerController);
+authRoutes.post("/activate", activateDataValidator, activateAccountController);
 authRoutes.post("/login", loginDataValidator, loginController);
 authRoutes.post("/logout", userAuthMiddleware, logoutController);
 authRoutes.post(

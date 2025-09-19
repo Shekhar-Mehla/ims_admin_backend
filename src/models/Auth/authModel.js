@@ -11,9 +11,5 @@ export const updateRefreshToken = async (email, refreshToken) =>
     { new: true }
   );
 
-export const updatePasswordByEmail = async (email, newPassword) =>
-  await authCollection.findOneAndUpdate(
-    { email },
-    { password: newPassword },
-    { new: true }
-  );
+export const updateUser = async (filter, update) =>
+  await authCollection.findOneAndUpdate(filter, update, { new: true });

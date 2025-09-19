@@ -1,6 +1,7 @@
 import Joi from 'joi';
 
 export const OBJECT_ID = Joi.string().regex(/^[0-9a-fA-F]{24}$/).required();
+export const VERIFY_OTP = Joi.string().regex(/^[0-9]{6}$/).required();
 export const EMAIL = Joi.string().email().required();
 export const STRING = Joi.string();
 export const BOOLEAN = Joi.boolean();

@@ -1,5 +1,5 @@
 import express from "express";
-import connection from "../ims_admin_backend/src/dbConfig.js";
+import connection from "./src/dbConfig.js";
 import cors from "cors";
 import errorMiddleWare from "./src/middlewares/errorMiddleWare.js";
 import authRoutes from "./src/routes/authRoutes.js";
