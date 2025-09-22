@@ -8,7 +8,8 @@ export const updateRefreshToken = async (email, refreshToken) =>
   await authCollection.findOneAndUpdate(
     { email },
     { refreshToken },
-    { new: true }
+
+    { new: true, password: 0 }
   );
 
 export const updateUser = async (filter, update) =>

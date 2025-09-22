@@ -3,6 +3,7 @@ import connection from "./src/dbConfig.js";
 import cors from "cors";
 import errorMiddleWare from "./src/middlewares/errorMiddleWare.js";
 import authRoutes from "./src/routes/authRoutes.js";
+import intershipRoutes from "./src/routes/internshipRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -24,6 +25,8 @@ app.use(express.json());
 
 // auth routes
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/internship", intershipRoutes);
+
 
 // write everything above do not touch these error middelware
 app.use((req, res, next) => {

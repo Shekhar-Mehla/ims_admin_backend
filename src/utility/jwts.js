@@ -10,7 +10,7 @@ export const generateAccessToken = async (authId, req) => {
       expiresIn: "15m",
     }
   );
-  
+
   const obj = {
     authId,
     accessToken,
@@ -35,9 +35,9 @@ export const generateRefreshToken = async (email) => {
       expiresIn: "7d",
     }
   );
-  console.log(refreshToken, ".......");
+
   const user = await updateRefreshToken(email, refreshToken);
-  console.log(user);
+
   return refreshToken;
 };
 export const verfiyRefreshToken = (token) => {

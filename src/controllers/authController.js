@@ -20,7 +20,7 @@ export const registerController = async (req, res) => {
   try {
     const { fName, lName, email, password, technologies, sectors, roles } =
       req.body;
-    console.log(req.body);
+   
     const existing = await checkUserByEmail(email);
     if (existing) {
       return responseClient({
@@ -100,13 +100,9 @@ export const registerController = async (req, res) => {
           statusCode: 400,
           message: "something went wrong try again to register",
         });
-  } catch (err) {
-    console.error("Registration error:", err);
-    return responseClient({
-      res,
-      statusCode: 500,
-      message: "Server error during registration",
-    });
+  } catch (error) {
+    console.error("Registration error:", error);
+   next(error)
   }
 };
 
@@ -118,7 +114,7 @@ export const activateAccountController = async (req, res, next) => {
 
     // Fetch OTP record from database
     const checkOtp = await getOtpCollection(otp);
-    console.log(checkOtp);
+    
 
     // If OTP is invalid or expired
     if (!checkOtp?._id) {
