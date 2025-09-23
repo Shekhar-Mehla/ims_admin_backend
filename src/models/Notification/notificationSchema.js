@@ -1,25 +1,48 @@
 import mongoose from "mongoose";
 
-export const NotificationSchema = new mongoose.Schema(
+const NotificationSchema = new mongoose.Schema(
   {
     profileId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Profile",
+      default: null, // Profile may not exist yet
+    },
+    createdBy: {
+      type: String, // or ObjectId if you store admin IDs
       required: true,
+    },
+
+    authId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Auth",
+      default: null, // Used before profile is created
     },
     type: {
       type: String,
-      enum: ["otp", "login_alert", "application_update"],
+      enum: [
+        "otp", // Email verification or password reset
+        "login_alert", // New login detected
+        "application_update", // Application status changed
+        "internship_posted", // New internship created
+        "internship_updated", // Internship edited
+        "resume_uploaded", // Resume added or changed
+        "profile_updated", // Profile info changed
+        "admin_message", // Custom admin alert
+        "system_alert", // Platform-wide announcements
+      ],
       required: true,
     },
-    subject: { type: String },
-    body: { type: String },
-    email: { type: String },
-    sentAt: { type: Date, default: null },
-    status: { type: String, enum: ["sent", "failed"], default: "sent" },
+    subject: { type: String, required: true },
+    body: { type: String, required: true },
+    email: { type: String, required: true },
+    sentAt: { type: Date, default: Date.now },
     readAt: { type: Date, default: null },
   },
   { timestamps: true }
 );
-notificationCollection = mongoose.model("Notification", NotificationSchema);
+
+const notificationCollection = mongoose.model(
+  "Notification",
+  NotificationSchema
+);
 export default notificationCollection;

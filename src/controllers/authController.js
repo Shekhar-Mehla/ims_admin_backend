@@ -15,12 +15,13 @@ import { otpEmailTemplate } from "../services/email/templates/emailOtp.js";
 import { sendEmail } from "../services/email/sendEmail.js";
 import { generatejwts } from "../utility/jwts.js";
 import { deleteManySessionByAuthId } from "../models/Session/sessionModel.js";
+import { createNotifications } from "../services/notification/createNotification.js";
 
 export const registerController = async (req, res) => {
   try {
     const { fName, lName, email, password, technologies, sectors, roles } =
       req.body;
-   
+
     const existing = await checkUserByEmail(email);
     if (existing) {
       return responseClient({
@@ -102,7 +103,7 @@ export const registerController = async (req, res) => {
         });
   } catch (error) {
     console.error("Registration error:", error);
-   next(error)
+    next(error);
   }
 };
 
@@ -114,7 +115,6 @@ export const activateAccountController = async (req, res, next) => {
 
     // Fetch OTP record from database
     const checkOtp = await getOtpCollection(otp);
-    
 
     // If OTP is invalid or expired
     if (!checkOtp?._id) {
@@ -181,6 +181,15 @@ export const loginController = async (req, res, next) => {
 
       if (isMatch) {
         const jwts = await generatejwts(auth?._id, email, req);
+        await createNotifications({
+          profileId: auth.profileId || null, // if available
+          authId: auth._id,
+          subject: "Login Successful",
+          body: `You logged in at ${new Date().toLocaleString()}`,
+          email: email,
+          type: "login_alert",
+          createdBy: "system", // or req.userInfo?.email if admin triggered
+        });
 
         return responseClient({
           res,
@@ -254,6 +263,16 @@ export const generateNewOtpController = async (req, res, next) => {
       subject: otp.purpose,
       template: otpEmailTemplate(otp.code),
     });
+    await createNotifications({
+      profileId: null,
+      authId: existing._id,
+      subject: "OTP Generated",
+      body: `Your OTP  is ${otp.code}`,
+      email: existing.email,
+      type: "otp",
+      createdBy: "system",
+    });
+
     // send email with otp
     return responseClient({
       res,
@@ -294,6 +313,15 @@ export const forgetPasswordController = async (req, res, next) => {
       to: existing.email,
       subject: "Password Changed",
       template: `<p>Your password has been changed successfully. If you need further assistance, please contact the Admin.</p>`,
+    });
+    await createNotifications({
+      profileId: existing.profileId || null,
+      authId: existing._id,
+      subject: "Password Reset",
+      body: `Your password was successfully reset on ${new Date().toLocaleString()}.`,
+      email: existing.email,
+      type: "password_reset",
+      createdBy: "system",
     });
     // send email notification about password change
     return responseClient({

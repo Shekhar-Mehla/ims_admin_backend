@@ -4,6 +4,7 @@ import cors from "cors";
 import errorMiddleWare from "./src/middlewares/errorMiddleWare.js";
 import authRoutes from "./src/routes/authRoutes.js";
 import intershipRoutes from "./src/routes/internshipRoutes.js";
+import notificationRouter from "./src/routes/notificationRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -27,6 +28,8 @@ app.use(express.json());
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/internship", intershipRoutes);
 
+// notification routes
+app.use("/api/v1/notifications", notificationRouter);
 
 // write everything above do not touch these error middelware
 app.use((req, res, next) => {
@@ -35,6 +38,3 @@ app.use((req, res, next) => {
   next(error);
 });
 app.use(errorMiddleWare);
-
-
-
