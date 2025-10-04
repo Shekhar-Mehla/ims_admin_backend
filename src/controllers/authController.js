@@ -15,7 +15,7 @@ import { otpEmailTemplate } from "../services/email/templates/emailOtp.js";
 import { sendEmail } from "../services/email/sendEmail.js";
 import { generatejwts } from "../utility/jwts.js";
 import { deleteManySessionByAuthId } from "../models/Session/sessionModel.js";
-import { createNotifications } from "../services/notification/createNotification.js";
+
 
 export const registerController = async (req, res) => {
   try {
@@ -181,15 +181,7 @@ export const loginController = async (req, res, next) => {
 
       if (isMatch) {
         const jwts = await generatejwts(auth?._id, email, req);
-        await createNotifications({
-          profileId: auth.profileId || null, // if available
-          authId: auth._id,
-          subject: "Login Successful",
-          body: `You logged in at ${new Date().toLocaleString()}`,
-          email: email,
-          type: "login_alert",
-          createdBy: "system", // or req.userInfo?.email if admin triggered
-        });
+       
 
         return responseClient({
           res,

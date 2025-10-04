@@ -8,7 +8,7 @@ import {
 import { getProfile } from "../models/Profile/profileModel.js";
 import responseClient from "../utility/responseClient.js";
 import slugify from "slugify";
-import { createNotifications } from "../services/notification/createNotification.js";
+
 
 //  Create new internship (Admin only)
 export const createInternshipController = async (req, res, next) => {
@@ -58,15 +58,7 @@ export const createInternshipController = async (req, res, next) => {
       });
     }
   
-    await createNotifications({
-      profileId: getUserProfile?._id,
-      authId: null,
-      subject: "Internship Posted",
-      body: `Your internship "${title}" at ${company} has been successfully posted.`,
-      
-      type: "internship_posted",
-      createdBy: req.userInfo?.email || "system",
-    });
+  
 
     return responseClient({
       res,
