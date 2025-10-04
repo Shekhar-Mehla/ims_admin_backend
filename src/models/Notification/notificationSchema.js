@@ -2,24 +2,29 @@ import mongoose from "mongoose";
 
 export const NotificationSchema = new mongoose.Schema(
   {
-    profileId: {
+    authId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Profile",
+      ref: "Auth",
       required: true,
     },
+    message: { type: String, required: true },
     type: {
       type: String,
-      enum: ["otp", "login_alert", "application_update"],
+      enum: ["reminder", "internship_posted", "application_update", "system"],
       required: true,
     },
-    subject: { type: String },
-    body: { type: String },
-    email: { type: String },
-    sentAt: { type: Date, default: null },
-    status: { type: String, enum: ["sent", "failed"], default: "sent" },
+    referenceId: { type: mongoose.Schema.Types.ObjectId },
+    referenceModel: {
+      type: String,
+      enum: ["Internship", "Application", "Profile"],
+    },
+    isRead: { type: Boolean, default: false },
     readAt: { type: Date, default: null },
   },
   { timestamps: true }
 );
-notificationCollection = mongoose.model("Notification", NotificationSchema);
+const notificationCollection = mongoose.model(
+  "Notification",
+  NotificationSchema
+);
 export default notificationCollection;
