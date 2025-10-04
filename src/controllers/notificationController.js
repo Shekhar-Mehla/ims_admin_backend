@@ -16,3 +16,4 @@ export const notificationUpdateController = async (req, res, next) => {
     next(error);
   }
 };
+

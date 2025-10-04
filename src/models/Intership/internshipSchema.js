@@ -13,8 +13,12 @@ const InternshipSchema = new mongoose.Schema(
       ref: "Auth",
       required: true,
     },
+    postedByName: { type: String, required: true },
+
+    slug: { type: String, unique: true, index: true },
   },
+
   { timestamps: true }
 );
-internshipCollection = mongoose.model("Internship", InternshipSchema);
+const internshipCollection = mongoose.model("Internship", InternshipSchema);
 export default internshipCollection;
