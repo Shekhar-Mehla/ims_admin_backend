@@ -9,7 +9,7 @@ const ProfileSchema = new mongoose.Schema(
       ref: "Auth",
       required: true,
     },
-
+    isAdmin: { type: Boolean, default: false },
     avatarUrl: { type: String, default: null },
     resumeUrl: { type: String, default: null },
     technologies: [{ type: String }],

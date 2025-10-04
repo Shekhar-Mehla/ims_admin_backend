@@ -2,11 +2,11 @@ import mongoose from "mongoose";
 
 const NotificationSchema = new mongoose.Schema(
   {
-    profileId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Profile",
-      default: null, // Profile may not exist yet
-    },
+    // profileId: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "Profile",
+    //   default: null, // Profile may not exist yet
+    // },
     createdBy: {
       type: String, // or ObjectId if you store admin IDs
       required: true,
@@ -34,9 +34,9 @@ const NotificationSchema = new mongoose.Schema(
     },
     subject: { type: String, required: true },
     body: { type: String, required: true },
-    email: { type: String, required: true },
+  
     sentAt: { type: Date, default: Date.now },
-    readAt: { type: Date, default: null },
+    markAsRead: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

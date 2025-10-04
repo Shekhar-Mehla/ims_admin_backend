@@ -57,21 +57,13 @@ export const createInternshipController = async (req, res, next) => {
         message: "could not created the intership. Internal server Error",
       });
     }
-    console.log({
-      profileId: getUserProfile?._id,
-      authId: null,
-      subject: "Internship Posted",
-      body: `Your internship "${title}" at ${company} has been successfully posted.`,
-      email: req.userInfo.email,
-      type: "internship_posted",
-      createdBy: req.userInfo?.email || "system",
-    });
+  
     await createNotifications({
       profileId: getUserProfile?._id,
       authId: null,
       subject: "Internship Posted",
       body: `Your internship "${title}" at ${company} has been successfully posted.`,
-      email: req.userInfo.email,
+      
       type: "internship_posted",
       createdBy: req.userInfo?.email || "system",
     });
