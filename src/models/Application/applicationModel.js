@@ -3,6 +3,12 @@ import applicationCollection from "./applicationSchema.js";
 export const applyApplicationModel = (applicationData) =>
   applicationCollection(applicationData).save();
 
+export const getApplicationByIdModel = (id) =>
+  applicationCollection
+    .findById(id)
+    .populate("internshipId")
+    .populate("profileId");
+
 // get all applications model
 export const getAllApplicationsModel = () =>
   applicationCollection.find().populate("internshipId").populate("profileId");

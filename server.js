@@ -12,8 +12,6 @@ import { Server } from "socket.io";
 
 import intershipRoutes from "./src/routes/internshipRoutes.js";
 
-
-
 const app = express();
 const PORT = process.env.PORT || 8000;
 
@@ -69,8 +67,6 @@ app.use("/api/v1/notification", notificationRouter);
 app.use("/api/v1/internship", intershipRoutes);
 
 // notification routes
-
-
 
 // write everything above do not touch these error middelware
 app.use((req, res, next) => {

@@ -1,6 +1,7 @@
 import {
   applyApplicationModel,
   getAllApplicationsModel,
+  getApplicationByIdModel,
   updateApplicationStatusModel,
 } from "../models/Application/applicationModel.js";
 import { createNotification } from "../models/Notification/notificationModel.js";
@@ -15,6 +16,14 @@ export const applyController = async (req, res, next) => {
       resumeUrl,
       publicResumeId,
     };
+    const checkExistingApplication = await getApplicationByIdModel(profileId);
+    if (checkExistingApplication) {
+      return responseClient({
+        res,
+        statusCode: 400,
+        message: "You have already applied for this internship",
+      });
+    }
     const application = await applyApplicationModel(applicationData);
     if (!application) {
       return responseClient({
