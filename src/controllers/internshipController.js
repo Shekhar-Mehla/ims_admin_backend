@@ -9,7 +9,6 @@ import { getProfile } from "../models/Profile/profileModel.js";
 import responseClient from "../utility/responseClient.js";
 import slugify from "slugify";
 
-
 //  Create new internship (Admin only)
 export const createInternshipController = async (req, res, next) => {
   // posted by
@@ -22,6 +21,9 @@ export const createInternshipController = async (req, res, next) => {
       technologies,
       sectors,
       roles,
+      stipend,
+      duration,
+      applicationDeadline,
     } = req.body;
 
     const postedBy = req.userInfo._id;
@@ -48,6 +50,9 @@ export const createInternshipController = async (req, res, next) => {
       postedBy,
       postedByName,
       slug,
+      stipend,
+      duration,
+      applicationDeadline,
     });
     if (!internship?._id) {
       return responseClient({
@@ -57,8 +62,8 @@ export const createInternshipController = async (req, res, next) => {
         message: "could not created the intership. Internal server Error",
       });
     }
-  
-  
+    // send email to all user is todo
+    // notify all active users by socket.io todo
 
     return responseClient({
       res,

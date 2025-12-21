@@ -2,10 +2,32 @@ import jwt from "jsonwebtoken";
 import { updateRefreshToken } from "../models/Auth/authModel.js";
 import { createSession } from "../models/Session/sessionModel.js";
 
+// Check if JWT secrets are configured
+const ACCESS_TOKEN_SECRET =
+  process.env.ACCESS_SECRETKEY ||
+  process.env.ACCESS_TOKEN_SECRET ||
+  "default_access_secret_change_in_production";
+const REFRESH_TOKEN_SECRET =
+  process.env.REFRESH_SECRETKEY ||
+  process.env.REFRESH_TOKEN_SECRET ||
+  "default_refresh_secret_change_in_production";
+
+if (!process.env.ACCESS_SECRETKEY && !process.env.ACCESS_TOKEN_SECRET) {
+  console.warn(
+    "⚠️  ACCESS_SECRETKEY not set in environment. Using default (not secure for production!)"
+  );
+}
+
+if (!process.env.REFRESH_SECRETKEY && !process.env.REFRESH_TOKEN_SECRET) {
+  console.warn(
+    "⚠️  REFRESH_SECRETKEY not set in environment. Using default (not secure for production!)"
+  );
+}
+
 export const generateAccessToken = async (authId, req) => {
   const accessToken = await jwt.sign(
     { authId: authId.toString() },
-    process.env.ACCESS_TOKEN_SECRET,
+    ACCESS_TOKEN_SECRET,
     {
       expiresIn: "15m",
     }
@@ -24,24 +46,20 @@ export const generateAccessToken = async (authId, req) => {
 };
 
 export const verfiyAccessToken = (token) => {
-  const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+  const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
   return decoded;
 };
 export const generateRefreshToken = async (email) => {
-  const refreshToken = await jwt.sign(
-    { email },
-    process.env.REFRESH_TOKEN_SECRET,
-    {
-      expiresIn: "7d",
-    }
-  );
+  const refreshToken = await jwt.sign({ email }, REFRESH_TOKEN_SECRET, {
+    expiresIn: "7d",
+  });
 
   const user = await updateRefreshToken(email, refreshToken);
 
   return refreshToken;
 };
 export const verfiyRefreshToken = (token) => {
-  const decoded = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
+  const decoded = jwt.verify(token, REFRESH_TOKEN_SECRET);
   return decoded;
 };
 
