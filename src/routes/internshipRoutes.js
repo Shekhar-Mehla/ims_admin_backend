@@ -12,20 +12,20 @@ const intershipRoutes = express.Router();
 
 // Create internship (protected)
 intershipRoutes.post(
-  "/add-intership",
+  "/add-internship",
   userAuthMiddleware,
   createInternshipController
 );
 
 // Get all internships (public)
-intershipRoutes.get("/", getIntershipController);
+intershipRoutes.get("/get-all-internships", getIntershipController);
 
 // Get internship by slug (public)
 intershipRoutes.get("/:slug", getIntershipBySlugController);
 
 // Update internship by ID (protected)
 intershipRoutes.put(
-  "/update/:id",
+  "/update/:slug",
   userAuthMiddleware,
   updateInternshipController
 );

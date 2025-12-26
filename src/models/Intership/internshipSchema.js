@@ -47,13 +47,13 @@ const InternshipSchema = new mongoose.Schema(
 
     // ✅ To make sidebar dynamic (replace hard-coded values)
     stipend: {
-      type: String,
+      type: Number,
       trim: true,
       maxlength: 100,
       default: null,
     },
     duration: {
-      type: String,
+      type: Number,
       trim: true,
       maxlength: 50,
       default: null,

@@ -61,7 +61,27 @@ export const getAllApplicationsController = async (req, res, next) => {
     next(error);
   }
 };
-
+// get application by id controller
+export const getApplicationByIdController = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const application = await getApplicationByIdModel(id);
+    if (!application) {
+      return responseClient({
+        res,
+        statusCode: 404,
+        message: "Application not found",
+      });
+    }
+    return responseClient({
+      res,
+      message: "Get application by id controller is working",
+      payload: application,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 export const updateApplicationStatusController = async (req, res, next) => {
   try {
     const { status } = req.body;
@@ -92,7 +112,8 @@ export const updateApplicationStatusController = async (req, res, next) => {
     await createNotification(notificationData);
     // notify user using socket
     const io = req.app.get("io"); // get socket.io instance
-
+    console.log(io);
+    console.log(updatedApplication.profileId.authId.toString());
     io.to(updatedApplication.profileId.authId.toString()).emit(
       "applicationStatusUpdated",
       {

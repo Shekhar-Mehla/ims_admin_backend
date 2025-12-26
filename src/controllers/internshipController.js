@@ -3,7 +3,7 @@ import {
   deleteInternshipById,
   getAllIntership,
   getIntershipDetailBySlug,
-  updateInternshipById,
+  updateInternshipBySlug,
 } from "../models/Intership/internshipModel.js";
 import { getProfile } from "../models/Profile/profileModel.js";
 import responseClient from "../utility/responseClient.js";
@@ -25,7 +25,7 @@ export const createInternshipController = async (req, res, next) => {
       duration,
       applicationDeadline,
     } = req.body;
-
+    console.log(req.body);
     const postedBy = req.userInfo._id;
     const getUserProfile = await getProfile(req.userInfo._id);
     const slug = slugify(title);
@@ -128,24 +128,25 @@ export const getIntershipBySlugController = async (req, res, next) => {
 
 export const updateInternshipController = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const { slug } = req.params;
+    console.log(slug);
     const updateData = req.body;
-
-    if (!id) {
+    console.log(updateData);
+    if (!slug) {
       return responseClient({
         res,
         statusCode: 400,
-        message: "Internship ID is required for update",
+        message: "Internship slug is required for update",
       });
     }
 
-    if (updateData.title) {
-      updateData.slug = slugify(updateData.title);
-    }
+    // if (updateData.title) {
+    //   updateData.slug = slugify(updateData.title);
+    // }
 
-    const updatedInternship = await updateInternshipById(id, updateData);
+    const updatedInternship = await updateInternshipBySlug(slug, updateData);
 
-    if (!updatedInternship?._id) {
+    if (!updatedInternship?.slug) {
       return responseClient({
         res,
         statusCode: 404,
