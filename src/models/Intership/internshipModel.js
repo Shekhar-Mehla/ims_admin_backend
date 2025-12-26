@@ -10,11 +10,13 @@ export const getAllIntership = async () =>
 
 // Get internship by slug
 export const getIntershipDetailBySlug = async (slug) =>
-  internshipCollection.findOne({ slug });
+  await internshipCollection.findOne({ slug });
 
-// Update internship by ID
-export const updateInternshipById = async (id, updateData) =>
-  await internshipCollection.findByIdAndUpdate(id, updateData, { new: true });
+// Update internship by slug
+export const updateInternshipBySlug = async (slug, updateData) =>
+  await internshipCollection.findOneAndUpdate({ slug }, updateData, {
+    new: true,
+  });
 
 // Delete internship by ID
 export const deleteInternshipById = async (id) =>
