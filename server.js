@@ -11,10 +11,12 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 
 import intershipRoutes from "./src/routes/internshipRoutes.js";
+import notificationCollection from "./src/models/Notification/notificationSchema.js";
 
 const app = express();
 const PORT = process.env.PORT || 8000;
-
+app.use(cors());
+app.use(express.json());
 // wrap express app inside http server
 const httpServer = createServer(app);
 // initialize socket.io
@@ -29,18 +31,21 @@ app.set("io", io);
 
 // socket.io connection
 io.on("connection", (socket) => {
-  console.log("🔌 User connected:", socket.id);
-
   // let user join a room based on their profileId/userId
-  socket.on("join", (userId) => {
+  socket.on("join", async (userId) => {
     socket.join(userId.toString());
-    console.log(` User with ID ${userId} joined room ${userId}`);
+    const unreadCount = await notificationCollection.countDocuments({
+      authId: userId,
+      isRead: false,
+    });
+    socket.emit("unreadCount", unreadCount);
   });
 
   socket.on("disconnect", () => {
     console.log(" User disconnected:", socket.id);
   });
 });
+// db connection
 connection()
   .then(() => {
     httpServer.listen(PORT, (error) => {
@@ -54,8 +59,6 @@ connection()
 app.get("/", (req, res) => {
   res.send("server is live");
 });
-app.use(cors());
-app.use(express.json());
 
 // auth routes
 app.use("/api/v1/images", imageRouter);

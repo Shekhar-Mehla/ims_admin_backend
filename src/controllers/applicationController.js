@@ -5,8 +5,9 @@ import {
   updateApplicationStatusModel,
 } from "../models/Application/applicationModel.js";
 import { createNotification } from "../models/Notification/notificationModel.js";
+import notificationCollection from "../models/Notification/notificationSchema.js";
 import responseClient from "../utility/responseClient.js";
-
+import mongoose from "mongoose";
 export const applyController = async (req, res, next) => {
   try {
     const { internshipId, profileId, resumeUrl, publicResumeId } = req.body;
@@ -103,26 +104,29 @@ export const updateApplicationStatusController = async (req, res, next) => {
     // save notification to db
 
     const notificationData = {
-      authId: updatedApplication.profileId.authId,
+      authId: new mongoose.Types.ObjectId(
+        updatedApplication.profileId._id || updatedApplication.profileId
+      ),
       message: `Your application status is ${status}`,
       type: "application_update",
       referenceId: updatedApplication._id,
       referenceModel: "Application",
     };
+
     await createNotification(notificationData);
     // notify user using socket
     const io = req.app.get("io"); // get socket.io instance
-    console.log(io);
-    console.log(updatedApplication.profileId.authId.toString());
-    io.to(updatedApplication.profileId.authId.toString()).emit(
-      "applicationStatusUpdated",
-      {
-        applicationId: id,
-        newStatus: status,
-        message: `Your application status changed to ${status}`,
-      }
-    );
-
+    const userRoom = updatedApplication?.profileId?._id.toString();
+    io.to(userRoom).emit("applicationStatusUpdated", {
+      applicationId: id,
+      newStatus: status,
+      message: `Your application status changed to ${status}`,
+    });
+    const unreadCount = await notificationCollection.countDocuments({
+      isRead: false,
+      authId: updatedApplication?.profileId?._id.toString(),
+    });
+    io.to(userRoom).emit("unreadCount", unreadCount);
     return responseClient({
       res,
       message: "Application status updated successfully",
