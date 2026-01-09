@@ -1,5 +1,8 @@
 import jwt from "jsonwebtoken";
-import { updateRefreshToken } from "../models/Auth/authModel.js";
+import {
+  updateRefreshToken,
+  getAuthUserById,
+} from "../models/Auth/authModel.js";
 import { createSession } from "../models/Session/sessionModel.js";
 
 // Check if JWT secrets are configured
@@ -24,21 +27,23 @@ if (!process.env.REFRESH_SECRETKEY && !process.env.REFRESH_TOKEN_SECRET) {
   );
 }
 
-export const generateAccessToken = async (authId, req) => {
-  const accessToken = await jwt.sign(
-    { authId: authId.toString() },
-    ACCESS_TOKEN_SECRET,
-    {
-      expiresIn: "15m",
-    }
-  );
+export const generateAccessToken = async (
+  authId,
+  email,
+  req,
+  usertype = []
+) => {
+  const payload = { email, usertype };
+  const accessToken = await jwt.sign(payload, ACCESS_TOKEN_SECRET, {
+    expiresIn: "1h",
+  });
 
   const obj = {
     authId,
     accessToken,
     userAgent: req.headers["user-agent"] || null,
     ip: req.ip || null,
-    expiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes from now
+    expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1 hour from now
   };
 
   await createSession(obj);
@@ -64,8 +69,12 @@ export const verfiyRefreshToken = (token) => {
 };
 
 export const generatejwts = async (authId, email, req) => {
+  // fetch user to include roles (usertype) in the access token
+  const user = await getAuthUserById(authId);
+  const usertype = Array.isArray(user?.usertype) ? user.usertype : [];
+
   const obj = {
-    accessToken: await generateAccessToken(authId, req),
+    accessToken: await generateAccessToken(authId, email, req, usertype),
     refreshToken: await generateRefreshToken(email),
   };
 

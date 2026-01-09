@@ -5,7 +5,7 @@ const responseClient = ({ res, statusCode = 200, message, payload }) => {
   } else {
     status = "error";
   }
-  res.status(statusCode).json({
+  return res.status(statusCode).json({
     status,
     message,
     payload,

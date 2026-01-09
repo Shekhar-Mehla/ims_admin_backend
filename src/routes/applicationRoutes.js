@@ -1,5 +1,8 @@
 import express from "express";
-import { userAuthMiddleware } from "../middlewares/authMiddleware.js";
+import {
+  userAuthMiddleware,
+  adminAuthMiddleware,
+} from "../middlewares/authMiddleware.js";
 import {
   applyController,
   getAllApplicationsController,
@@ -18,6 +21,7 @@ applicationRoutes.post("/apply", userAuthMiddleware, applyController);
 applicationRoutes.get(
   "/get-all-applications",
   userAuthMiddleware,
+  adminAuthMiddleware,
   getAllApplicationsController
 );
 // get application by id
@@ -30,5 +34,6 @@ applicationRoutes.get(
 applicationRoutes.patch(
   "/update-application-status/:id",
   userAuthMiddleware,
+  adminAuthMiddleware,
   updateApplicationStatusController
 );

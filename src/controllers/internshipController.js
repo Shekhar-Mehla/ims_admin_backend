@@ -80,16 +80,29 @@ export const createInternshipController = async (req, res, next) => {
 export const getIntershipController = async (req, res, next) => {
   try {
     const internshipList = await getAllIntership();
-    if (!internshipList.length && Array.isArray(internshipList)) {
+
+    // If the model didn't return an array, treat it as a server error
+    if (!Array.isArray(internshipList)) {
       return responseClient({
         res,
         statusCode: 500,
         message: "Internal server error",
       });
     }
+
+    // Return an empty array with 200 when no internships are found
+    if (internshipList.length === 0) {
+      return responseClient({
+        res,
+        statusCode: 200,
+        message: "No internships found",
+        payload: [],
+      });
+    }
+
     return responseClient({
       res,
-      message: "here is all intership",
+      message: "Here are all internships",
       payload: internshipList,
     });
   } catch (error) {

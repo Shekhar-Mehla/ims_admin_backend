@@ -1,5 +1,6 @@
-import { checkUserByEmail, getUserById } from "../models/Auth/authModel.js";
+import { checkUserByEmail, getAuthUserById, getUserProfileByAuthId } from "../models/Auth/authModel.js";
 import { getsessionByAccessToken } from "../models/Session/sessionModel.js";
+import { getProfile } from "../models/Profile/profileModel.js";
 import {
   generateAccessToken,
   verfiyAccessToken,
@@ -12,7 +13,7 @@ export const registerDataValidationMiddleware = (req, res, next) => {};
 // user authentication middleware
 export const userAuthMiddleware = async (req, res, next) => {
   const { authorization } = req.headers;
-
+  console.log("userAuthMiddleware");
   if (!authorization) {
     return responseClient({
       res,
@@ -24,15 +25,26 @@ export const userAuthMiddleware = async (req, res, next) => {
 
   try {
     const decodedtoken = verfiyAccessToken(token);
-    if (decodedtoken?.authId) {
+    console.log(decodedtoken, "decodedtoken");
+    if (decodedtoken?.email) {
       const session = await getsessionByAccessToken(token);
+      console.log(session, "session");
       if (session?._id) {
-        const user = await getUserById(session.authId);
-
+        const user = await getAuthUserById(session.authId);
+        console.log(user, "user");
         if (user?._id && user.verified == true) {
           user.password = undefined;
-          req.userInfo = { _id: user._id, email: user.email };
+          // Prefer role info from token if available (fewer DB reads), else fallback to user.usertype
+          const usertype = user.usertype || [];
 
+          const profile = await getUserProfileByAuthId(user._id);
+          console.log(profile, "profile");
+          req.userInfo = {
+            _id: user._id,
+            email: user.email,
+            usertype: usertype,
+          };
+          console.log(req.userInfo, "req.userInfo");
           return next();
         } else {
           return responseClient({
@@ -49,6 +61,32 @@ export const userAuthMiddleware = async (req, res, next) => {
   }
 };
 
+// middleware to ensure the authenticated user is an admin
+export const adminAuthMiddleware = async (req, res, next) => {
+  try {
+    // userAuthMiddleware should have already populated req.userInfo
+    const userInfo = req.userInfo;
+    if (!userInfo || !userInfo._id) {
+      return responseClient({
+        res,
+        statusCode: 401,
+        message: "Unauthorized: No user information",
+      });
+    }
+
+    if (userInfo.usertype && userInfo.usertype.includes("admin")) {
+      return next();
+    }
+
+    return responseClient({
+      res,
+      statusCode: 403,
+      message: "Forbidden: Admins only",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 // renew access token middleware
 export const renewAccessTokenMiddleware = async (req, res, next) => {
   const { authorization } = req.headers;
@@ -64,8 +102,12 @@ export const renewAccessTokenMiddleware = async (req, res, next) => {
     const decodedtoken = verfiyRefreshToken(token);
     if (decodedtoken?.authId) {
       const auth = await checkUserByEmail(decodedtoken.email);
-      if (auth?._id && user.verified == true) {
-        const accessToken = await generateAccessToken(auth._id, req);
+      if (auth?._id && auth.verified == true) {
+        const accessToken = await generateAccessToken(
+          auth._id,
+          req,
+          Array.isArray(auth.usertype) ? auth.usertype : []
+        );
         return responseClient({
           res,
           statusCode: 200,

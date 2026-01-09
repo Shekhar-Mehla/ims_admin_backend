@@ -4,7 +4,8 @@ const AuthSchema = new mongoose.Schema(
   {
     email: { type: String, required: true, unique: true },
     password: { type: String },
-    providers: [{ provider: String, providerId: String }],
+
+    usertype: { type: [String], default: ["user"] },
     verified: { type: Boolean, default: false },
     refreshToken: { type: String },
   },

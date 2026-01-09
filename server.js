@@ -15,7 +15,13 @@ import notificationCollection from "./src/models/Notification/notificationSchema
 
 const app = express();
 const PORT = process.env.PORT || 8000;
-app.use(cors());
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 app.use(express.json());
 // wrap express app inside http server
 const httpServer = createServer(app);

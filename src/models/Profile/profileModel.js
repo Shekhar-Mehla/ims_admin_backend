@@ -15,4 +15,8 @@ export const matchProfiles = () => {
 };
 
 
-export const getallUsers =async()=> await profileCollection.find()
+export const getallUsers = async () =>
+  await profileCollection.find().populate("authId", "email verified usertype");
+
+export const deleteProfileByAuthId = async (authId) =>
+  await profileCollection.findOneAndDelete({ authId });

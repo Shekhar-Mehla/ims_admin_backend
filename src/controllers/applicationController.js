@@ -74,6 +74,35 @@ export const getApplicationByIdController = async (req, res, next) => {
         message: "Application not found",
       });
     }
+
+    // Allow access if requester is the owner (profile.authId) or an admin
+    const requesterAuthId = req.userInfo?._id?.toString();
+    const ownerAuthId = application?.profileId?.authId
+      ? application.profileId.authId._id
+        ? application.profileId.authId._id.toString()
+        : application.profileId.authId.toString()
+      : null;
+
+    console.log(
+      "getApplicationById request by",
+      requesterAuthId,
+      "owner",
+      ownerAuthId,
+      "isAdmin",
+      req.userInfo?.isAdmin
+    );
+
+    const isOwner =
+      requesterAuthId && ownerAuthId && requesterAuthId === ownerAuthId;
+
+    if (!isOwner && !req.userInfo?.isAdmin) {
+      return responseClient({
+        res,
+        statusCode: 403,
+        message: "Forbidden: You are not allowed to view this application",
+      });
+    }
+
     return responseClient({
       res,
       message: "Get application by id controller is working",
