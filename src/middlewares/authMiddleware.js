@@ -1,4 +1,8 @@
-import { checkUserByEmail, getAuthUserById, getUserProfileByAuthId } from "../models/Auth/authModel.js";
+import {
+  checkUserByEmail,
+  getAuthUserById,
+  getUserProfileByAuthId,
+} from "../models/Auth/authModel.js";
 import { getsessionByAccessToken } from "../models/Session/sessionModel.js";
 import { getProfile } from "../models/Profile/profileModel.js";
 import {
@@ -13,7 +17,7 @@ export const registerDataValidationMiddleware = (req, res, next) => {};
 // user authentication middleware
 export const userAuthMiddleware = async (req, res, next) => {
   const { authorization } = req.headers;
-  console.log("userAuthMiddleware");
+
   if (!authorization) {
     return responseClient({
       res,
@@ -25,13 +29,13 @@ export const userAuthMiddleware = async (req, res, next) => {
 
   try {
     const decodedtoken = verfiyAccessToken(token);
-    console.log(decodedtoken, "decodedtoken");
+
     if (decodedtoken?.email) {
       const session = await getsessionByAccessToken(token);
-      console.log(session, "session");
+
       if (session?._id) {
         const user = await getAuthUserById(session.authId);
-        console.log(user, "user");
+
         if (user?._id && user.verified == true) {
           user.password = undefined;
           // Prefer role info from token if available (fewer DB reads), else fallback to user.usertype
