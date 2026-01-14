@@ -6,7 +6,10 @@ import {
   updateInternshipController,
   deleteInternshipController,
 } from "../controllers/internshipController.js";
-import { userAuthMiddleware } from "../middlewares/authMiddleware.js";
+import {
+  userAuthMiddleware,
+  staffAuthMiddleware,
+} from "../middlewares/authMiddleware.js";
 
 const intershipRoutes = express.Router();
 
@@ -14,6 +17,7 @@ const intershipRoutes = express.Router();
 intershipRoutes.post(
   "/add-internship",
   userAuthMiddleware,
+  staffAuthMiddleware,
   createInternshipController
 );
 
@@ -27,6 +31,7 @@ intershipRoutes.get("/:slug", getIntershipBySlugController);
 intershipRoutes.put(
   "/update/:slug",
   userAuthMiddleware,
+  staffAuthMiddleware,
   updateInternshipController
 );
 
@@ -34,6 +39,7 @@ intershipRoutes.put(
 intershipRoutes.delete(
   "/delete/:id",
   userAuthMiddleware,
+  staffAuthMiddleware,
   deleteInternshipController
 );
 

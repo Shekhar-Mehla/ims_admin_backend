@@ -11,7 +11,6 @@ export const uploadMediaToCloudinary = async (file) => {
     const result = await cloudinary.uploader.upload(file, {
       resourcetype: "auto",
     });
-    console.log(result);
     return result;
   } catch (error) {
     throw new Error(error.message);
@@ -27,16 +26,13 @@ export const deleteMediaFromCloudinary = async (publicId) => {
         resource_type: type,
       });
 
-      console.log(`Checked ${publicId} as ${type}:`, result);
 
       // If successfully deleted, return immediately
       if (result.result === "ok") {
-        console.log(`✓ Successfully deleted as ${type}`);
         return { ...result, resource_type: type };
       }
 
       // If not found, just continue to next type
-      console.log(`✗ Not found as ${type}, trying next...`);
     } catch (error) {
       console.error(`Failed with type ${type}:`, error.message);
     }

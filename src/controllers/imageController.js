@@ -13,7 +13,6 @@ export const imageUploadController = async (req, res) => {
         message: "No file uploaded",
       });
     }
-    console.log(req.files);
     const fileUrls = await Promise.all(
       req.files.map(async (file) => {
         const result = await uploadMediaToCloudinary(file.path);

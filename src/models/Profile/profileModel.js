@@ -20,3 +20,6 @@ export const getallUsers = async () =>
 
 export const deleteProfileByAuthId = async (authId) =>
   await profileCollection.findOneAndDelete({ authId });
+
+export const updateProfileByAuthId = async (authId, data) =>
+  await profileCollection.findOneAndUpdate({ authId }, data, { new: true });

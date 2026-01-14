@@ -9,167 +9,18 @@ import {
   getUserProfileByAuthId,
   updateRefreshToken,
   updateUser,
+  getAuthUserById,
 } from "../models/Auth/authModel.js";
-import { createProfile } from "../models/Profile/profileModel.js";
+import { createProfile, getProfile } from "../models/Profile/profileModel.js";
 import { bcryptPassword, comparePassword } from "../utility/bcrypt.js";
 import generateOTP from "../utility/genrateOtp.js";
 import { createOtpModel, getOtpCollection } from "../models/Otp/otpModel.js";
 import { otpEmailTemplate } from "../services/email/templates/emailOtp.js";
 import { sendEmail } from "../services/email/sendEmail.js";
-import { generateAccessToken, generatejwts, verfiyRefreshToken } from "../utility/jwts.js";
+import { generateAccessToken, generatejwts, verfiyAccessToken, verfiyRefreshToken } from "../utility/jwts.js";
 import { deleteManySessionByAuthId } from "../models/Session/sessionModel.js";
 
-export const registerController = async (req, res) => {
-  try {
-    const { fName, lName, email, password, technologies, sectors, roles } =
-      req.body;
 
-    const existing = await checkUserByEmail(email);
-    if (existing) {
-      return responseClient({
-        res,
-        statusCode: 409,
-        message: "Email already registered",
-        payload: null,
-      });
-    }
-    // hashed the password
-    const hashedPassword = await bcryptPassword(req.body.password);
-
-    const auth = await createUser({
-      email,
-      password: hashedPassword,
-      verified: false,
-    });
-    if (!auth?._id) {
-      return responseClient({
-        res,
-        statusCode: 400,
-        message: "error in creating user",
-      });
-    }
-    const profile = await createProfile({
-      authId: auth._id,
-      fName,
-      lName,
-      technologies,
-      sectors,
-      roles,
-    });
-    if (!profile?._id) {
-      return responseClient({
-        res,
-        statusCode: 400,
-        message: "error in creating user profile",
-        payload: null,
-      });
-    }
-    // create otp
-    const otpCode = generateOTP();
-    // store otp into otp collection
-    const otpObject = {
-      authId: auth._id,
-      code: otpCode,
-      purpose: "email_verification",
-      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
-    };
-
-    const otp = await createOtpModel(otpObject);
-    // send email with otp
-    if (!otp._id) {
-      return responseClient({
-        res,
-        statusCode: 400,
-        message: "error in creating otp",
-        payload: null,
-      });
-    }
-
-    const template = otpEmailTemplate(otp.code);
-
-    const mail = await sendEmail({
-      to: auth.email,
-      subject: otp.purpose,
-      template: template,
-    });
-    mail
-      ? responseClient({
-          res,
-          statusCode: 201,
-          message: "we have sent you an email with verification code",
-        })
-      : responseClient({
-          res,
-          statusCode: 400,
-          message: "something went wrong try again to register",
-        });
-  } catch (error) {
-    console.error("Registration error:", error);
-    next(error);
-  }
-};
-
-// account activation controller
-
-export const activateAccountController = async (req, res, next) => {
-  try {
-    const { otp } = req.body;
-
-    // Fetch OTP record from database
-    const checkOtp = await getOtpCollection(otp);
-
-    // If OTP is invalid or expired
-    if (!checkOtp?._id) {
-      return responseClient({
-        res,
-        statusCode: 400,
-        message:
-          "OTP you have provided is invalid or expired. Click on 'Generate New OTP' to get a fresh one.",
-      });
-    }
-
-    // Proceed only if OTP is for email verification
-    if (checkOtp.purpose === "email_verification") {
-      const user = await updateUser(
-        { _id: checkOtp.authId },
-        { verified: true }
-      );
-
-      if (user?._id) {
-        sendEmail({
-          to: user.email, // assuming `user` contains the email
-          subject: "Account Verified",
-          template: `
-            <p>Good news — your account has been <strong>successfully verified</strong>! 🎉</p>
-            <p>You can now log in and start using all the features available to you.</p>
-            <p>Welcome aboard, and thank you for joining us!</p>
-            <p>— The IMS Team</p>
-          `,
-        });
-
-        return responseClient({
-          res,
-          statusCode: 200,
-          message: "Account successfully verified.",
-        });
-      } else {
-        return responseClient({
-          res,
-          statusCode: 400,
-          message: "Something went wrong while verifying your account.",
-        });
-      }
-    } else {
-      return responseClient({
-        res,
-        statusCode: 400,
-        message: "OTP purpose mismatch. Cannot verify account.",
-      });
-    }
-  } catch (error) {
-    next(error);
-  }
-};
 
 //login controller
 
@@ -177,35 +28,55 @@ export const loginController = async (req, res, next) => {
   try {
     const { email, password } = req.body;
     const auth = await checkUserByEmail(email);
+    
 
-    if (auth?._id) {
-      const isMatch = await comparePassword(password, auth.password);
-
-      if (isMatch) {
-        // user type check
-        if (!auth.usertype.includes("admin") && !auth.usertype.includes("staff")) {
-          return responseClient({
-            res,
-            statusCode: 403,
-            message: "Access denied. Admins and Staff only.",
-          });
-        }
-        const jwts = await generatejwts(auth?._id, email, req);
-
-        return responseClient({
-          res,
-          statusCode: 200,
-          message: "login successful",
-          payload: jwts,
-        });
-      }
-    } else {
+    if (!auth?._id) {
       return responseClient({
         res,
         statusCode: 401,
         message: "Invalid email or password",
       });
     }
+
+    const isMatch = await comparePassword(password, auth.password);
+
+    if (!isMatch) {
+      return responseClient({
+        res,
+        statusCode: 401,
+        message: "Invalid email or password",
+      });
+    }
+
+    // user type check
+    if (!auth.usertype.includes("admin") && !auth.usertype.includes("staff")) {
+      return responseClient({
+        res,
+        statusCode: 403,
+        message: "Access denied. Admins and Staff only.",
+      });
+    }
+
+    if (auth?.verified === false) {
+      // create token and link to send to the client to change password once he changed password we will update the verified field to true
+      const token = await generateAccessToken(auth?._id, email, req);
+      const link = `${process.env.ROOT_URL}/reset-password?token=${token}`;
+      return responseClient({
+        res,
+        statusCode: 200,
+        message: "change password",
+        payload: link,
+      });
+    }
+
+    const jwts = await generatejwts(auth?._id, email, req);
+
+    return responseClient({
+      res,
+      statusCode: 200,
+      message: "login successful",
+      payload: jwts,
+    });
   } catch (error) {
     next(error);
   }
@@ -339,7 +210,6 @@ export const getProfileController = async (req, res, next) => {
   try {
 
     const profile = await getUserProfileByAuthId(req.userInfo._id);
-    console.log(profile, "..............");
 
     if (!profile) {
       return responseClient({
@@ -359,6 +229,7 @@ export const getProfileController = async (req, res, next) => {
     const payload = {
       ...profileObj,
       email,
+      role: authData.usertype?.[0] || 'user',
       // Keep authId as simple id for frontend
       authId: authData._id || profileObj.authId,
     };
@@ -428,7 +299,6 @@ export const refreshAccessTokenController = async (req, res, next) => {
     
 
     const accessToken = await generateAccessToken(auth._id,email, req);
-    console.log(accessToken,"accessToken");
 
     return responseClient({
       res,
@@ -530,7 +400,7 @@ export const inviteStaffController = async (req, res, next) => {
 };
 
 
-import { getallUsers } from "../models/Profile/profileModel.js";
+import { getallUsers, updateProfileByAuthId } from "../models/Profile/profileModel.js";
 
 // get all users controller
 export const getAllUsersController = async (req, res, next) => {
@@ -604,3 +474,132 @@ export const deleteUserController = async (req, res, next) => {
   }
 };
 
+// reset password by token controller
+export const resetPasswordByTokenController = async (req, res, next) => {
+  try {
+    const { password } = req.body;
+    const { authorization } = req.headers;
+
+    if (!authorization) {
+      return responseClient({
+        res,
+        statusCode: 401,
+        message: "Unauthorized: No token provided",
+      });
+    }
+
+    const token = authorization.split(" ")[1];
+    const decodedToken = verfiyAccessToken(token);
+
+    if (!decodedToken?.authId) {
+      return responseClient({
+        res,
+        statusCode: 401,
+        message: "Unauthorized: Invalid or expired token",
+      });
+    }
+
+    const hashedPassword = await bcryptPassword(password);
+    const user = await updateUser(
+      { _id: decodedToken.authId },
+      { password: hashedPassword, verified: true }
+    );
+
+    if (!user?._id) {
+      return responseClient({
+        res,
+        statusCode: 400,
+        message: "Something went wrong while resetting your password.",
+      });
+    }
+
+    sendEmail({
+      to: user.email,
+      subject: "Password Reset Successful",
+      template: `<p>Your password has been successfully reset. You can now log in with your new password.</p>`,
+    });
+
+    return responseClient({
+      res,
+      statusCode: 200,
+      message: "Password reset successfully. You can now log in.",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// get user profile by id controller (for Admin/Staff)
+export const getUserProfileByIdController = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const profile = await getProfile(id);
+
+    if (!profile) {
+      return responseClient({
+        res,
+        statusCode: 404,
+        message: "Profile not found",
+      });
+    }
+
+    // Populate auth data if not done in getProfile model
+    // Our getProfile model doesn't populate authId, let's do it manually or update model.
+    // For now, let's just fetch the auth data separately if needed, or update the profile object.
+    
+    const profileObj = profile.toObject();
+    
+    // Fetch auth data to get email and verified status
+    const auth = await getAuthUserById(id);
+
+    const payload = {
+      ...profileObj,
+      email: auth?.email,
+      verified: auth?.verified,
+      usertype: auth?.usertype,
+      authId: id
+    };
+
+    return responseClient({
+      res,
+      statusCode: 200,
+      message: "User profile retrieved successfully",
+      payload,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// update any user profile controller (Admin Only)
+export const updateAnyUserProfileController = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { fName, lName, roles } = req.body;
+
+    // Update profile data
+    const profile = await updateProfileByAuthId(id, { fName, lName, roles });
+
+    if (!profile) {
+      return responseClient({
+        res,
+        statusCode: 404,
+        message: "Profile not found",
+      });
+    }
+
+    // If roles are provided, we should also update the usertype in Auth model
+    if (roles && roles.length > 0) {
+      await updateUser({ _id: id }, { usertype: roles });
+    }
+
+    return responseClient({
+      res,
+      statusCode: 200,
+      message: "User updated successfully",
+      payload: profile,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

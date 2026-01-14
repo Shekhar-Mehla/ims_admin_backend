@@ -33,7 +33,7 @@ export const generateAccessToken = async (
   req,
   usertype = []
 ) => {
-  const payload = { email, usertype };
+  const payload = { authId, email, usertype };
   const accessToken = await jwt.sign(payload, ACCESS_TOKEN_SECRET, {
     expiresIn: "1h",
   });

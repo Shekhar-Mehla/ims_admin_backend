@@ -2,26 +2,24 @@ import express from "express";
 import {
   userAuthMiddleware,
   adminAuthMiddleware,
+  staffAuthMiddleware,
 } from "../middlewares/authMiddleware.js";
 import {
-  applyController,
   getAllApplicationsController,
   getApplicationByIdController,
   updateApplicationStatusController,
+  deleteApplicationController,
 } from "../controllers/applicationController.js";
 
 const applicationRoutes = express.Router();
 
 export default applicationRoutes;
 
-//apply an application
-applicationRoutes.post("/apply", userAuthMiddleware, applyController);
-
 // get all applications
 applicationRoutes.get(
   "/get-all-applications",
   userAuthMiddleware,
-  adminAuthMiddleware,
+  staffAuthMiddleware,
   getAllApplicationsController
 );
 // get application by id
@@ -34,6 +32,14 @@ applicationRoutes.get(
 applicationRoutes.patch(
   "/update-application-status/:id",
   userAuthMiddleware,
-  adminAuthMiddleware,
+  staffAuthMiddleware,
   updateApplicationStatusController
+);
+
+// delete application route
+applicationRoutes.delete(
+  "/delete/:id",
+  userAuthMiddleware,
+  staffAuthMiddleware,
+  deleteApplicationController
 );

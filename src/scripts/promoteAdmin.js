@@ -20,8 +20,6 @@ if (!email) {
       { _id: user._id },
       { usertype: ["admin"] }
     );
-    console.log(`User ${email} promoted to admin.`);
-    console.log(updated);
     process.exit(0);
   } catch (err) {
     console.error(err);

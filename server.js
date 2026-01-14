@@ -80,7 +80,7 @@ app.use("/api/v1/internship", intershipRoutes);
 // write everything above do not touch these error middelware
 app.use((req, res, next) => {
   const error = new Error(`not found ${req.originalUrl}`);
-  error.stausCode = 404;
+  error.statusCode = 404;
   next(error);
 });
 app.use(errorMiddleWare);

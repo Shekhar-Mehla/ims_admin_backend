@@ -1,7 +1,7 @@
 import responseClient from "../utility/responseClient.js";
 
 const errorMiddleWare = (error, req, res, next) => {
-console.log(error,"error middleware ran");
+  console.error(error, "error middleware ran");
   const statusCode = error.statusCode || 500;
   let message;
   if (statusCode >= 500) {

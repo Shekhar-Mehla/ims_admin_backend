@@ -25,7 +25,6 @@ export const createInternshipController = async (req, res, next) => {
       duration,
       applicationDeadline,
     } = req.body;
-    console.log(req.body);
     const postedBy = req.userInfo._id;
     const getUserProfile = await getProfile(req.userInfo._id);
     const slug = slugify(title);
@@ -142,9 +141,7 @@ export const getIntershipBySlugController = async (req, res, next) => {
 export const updateInternshipController = async (req, res, next) => {
   try {
     const { slug } = req.params;
-    console.log(slug);
     const updateData = req.body;
-    console.log(updateData);
     if (!slug) {
       return responseClient({
         res,

@@ -6,41 +6,9 @@ import {
 } from "../models/Application/applicationModel.js";
 import { createNotification } from "../models/Notification/notificationModel.js";
 import notificationCollection from "../models/Notification/notificationSchema.js";
+import applicationCollection from "../models/Application/applicationSchema.js";
 import responseClient from "../utility/responseClient.js";
 import mongoose from "mongoose";
-export const applyController = async (req, res, next) => {
-  try {
-    const { internshipId, profileId, resumeUrl, publicResumeId } = req.body;
-    const applicationData = {
-      internshipId,
-      profileId,
-      resumeUrl,
-      publicResumeId,
-    };
-    const checkExistingApplication = await getApplicationByIdModel(profileId);
-    if (checkExistingApplication) {
-      return responseClient({
-        res,
-        statusCode: 400,
-        message: "You have already applied for this internship",
-      });
-    }
-    const application = await applyApplicationModel(applicationData);
-    if (!application) {
-      return responseClient({
-        res,
-        statusCode: 400,
-        message: "Failed to apply for the internship",
-      });
-    }
-    return responseClient({
-      res,
-      message: "Successfully applied for the internship",
-    });
-  } catch (error) {
-    next(error);
-  }
-};
 // get all applications controller
 export const getAllApplicationsController = async (req, res, next) => {
   try {
@@ -83,19 +51,16 @@ export const getApplicationByIdController = async (req, res, next) => {
         : application.profileId.authId.toString()
       : null;
 
-    console.log(
-      "getApplicationById request by",
-      requesterAuthId,
-      "owner",
-      ownerAuthId,
-      "isAdmin",
-      req.userInfo?.isAdmin
-    );
 
     const isOwner =
       requesterAuthId && ownerAuthId && requesterAuthId === ownerAuthId;
 
-    if (!isOwner && !req.userInfo?.isAdmin) {
+    const isStaffOrAdmin =
+      req.userInfo?.usertype?.includes("admin") ||
+      req.userInfo?.usertype?.includes("staff") ||
+      req.userInfo?.isAdmin;
+
+    if (!isOwner && !isStaffOrAdmin) {
       return responseClient({
         res,
         statusCode: 403,
@@ -159,6 +124,39 @@ export const updateApplicationStatusController = async (req, res, next) => {
     return responseClient({
       res,
       message: "Application status updated successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+// delete application controller
+export const deleteApplicationController = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return responseClient({
+        res,
+        statusCode: 400,
+        message: "Application ID is required for deletion",
+      });
+    }
+
+    // Since we're using staffAuthMiddleware, we know the user is at least staff
+    const deletedApplication = await applicationCollection.findByIdAndDelete(id);
+
+    if (!deletedApplication) {
+      return responseClient({
+        res,
+        statusCode: 404,
+        message: "Application not found or already deleted",
+      });
+    }
+
+    return responseClient({
+      res,
+      statusCode: 200,
+      message: "Application deleted successfully",
     });
   } catch (error) {
     next(error);

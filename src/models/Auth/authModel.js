@@ -29,7 +29,8 @@ export const updateUser = async (filter, update) =>
 export const getUserProfileById = async (id) => await profileCollection.findById(id);
 
 
-export const getUserProfileByAuthId = async (id) => await profileCollection.findOne({authId:id});
+export const getUserProfileByAuthId = async (id) =>
+  await profileCollection.findOne({ authId: id }).populate("authId", "email verified usertype");
 
 
 export const deleteAuthUser = async (id) => await authCollection.findByIdAndDelete(id);
