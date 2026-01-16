@@ -350,7 +350,7 @@ export const inviteStaffController = async (req, res, next) => {
       lName,
       technologies: [],
       sectors: [],
-      roles: roles || ["staff"],
+      roles: [],
     });
 
     if (!profile?._id) {

@@ -48,19 +48,17 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", () => {
-    console.log(" User disconnected:", socket.id);
+    // User disconnected
   });
 });
 // db connection
-connection()
+  connection()
   .then(() => {
     httpServer.listen(PORT, (error) => {
-      return !error
-        ? console.log(`service is running at http://localhost:${PORT}`)
-        : console.log(error);
+      if (error) return;
     });
   })
-  .catch((error) => console.log(error));
+  .catch((error) => {});
 
 app.get("/", (req, res) => {
   res.send("server is live");

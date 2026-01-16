@@ -57,12 +57,12 @@ export const userAuthMiddleware = async (req, res, next) => {
           // Prefer role info from token if available (fewer DB reads), else fallback to user.usertype
           const usertype = user.usertype || [];
 
-          const profile = await getUserProfileByAuthId(user._id);
+          
           req.userInfo = {
             _id: user._id,
             email: user.email,
-            usertype: usertype,
-            isAdmin: profile?.isAdmin || false,
+            usertype: user.usertype,
+            
           };
           return next();
         } else {
