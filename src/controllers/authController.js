@@ -479,7 +479,7 @@ export const resetPasswordByTokenController = async (req, res, next) => {
   try {
     const { password } = req.body;
     const { authorization } = req.headers;
-
+// check authorization
     if (!authorization) {
       return responseClient({
         res,
